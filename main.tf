@@ -1,3 +1,7 @@
+locals {
+  azs = data.aws_availability_zones.available.names
+}
+
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -15,8 +19,6 @@ resource "aws_vpc" "mtc_vpc" {
     create_before_destroy = true 
   }
 }
-
-
 
 resource "aws_internet_gateway" "mtc_internet_gateway" {
   vpc_id = aws_vpc.mtc_vpc.id
@@ -49,21 +51,21 @@ resource "aws_default_route_table" "mtc_vpc_private_rt" {
 
 
 resource "aws_subnet" "mtc_public_subnet" {
-  count = length (var.public_cidr) 
+  count = length (local.azs) 
   vpc_id     =  aws_vpc.mtc_vpc.id
-  cidr_block = var.public_cidr[count.index]
+  cidr_block = cidrsubnet(var.vpc_cidr,8,count.index)
   map_public_ip_on_launch = true
-  availability_zone = data.aws_availability_zones.available.names[count.index]
+  availability_zone = local.azs[count.index]
   tags = {
     Name = "mtc_public_subnet-${count.index + 1}"
   }
 }
 resource "aws_subnet" "mtc_private_subnet" {
-  count = length (var.private_cidr) 
+  count = length (local.azs) 
   vpc_id     =  aws_vpc.mtc_vpc.id
-  cidr_block = var.public_cidr[count.index]
+ cidr_block = cidrsubnet(var.vpc_cidr,8,length(local.azs)+count.index)
   map_public_ip_on_launch = true
-  availability_zone = data.aws_availability_zones.available.names[count.index]
+  availability_zone = local.azs[count.index]
   tags = {
     Name = "mtc_private_subnet-${count.index + 1}"
   }
