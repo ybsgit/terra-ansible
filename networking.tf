@@ -79,6 +79,7 @@ resource "aws_route_table_association" "mtc_public_asso" {
 resource "aws_security_group" "mtc_sg" {
   name =  "public_sg"
   description = "security group for public instances"
+  vpc_id      = aws_vpc.mtc_vpc.id
 }
 
 resource "aws_security_group_rule" "ingress_all" {
